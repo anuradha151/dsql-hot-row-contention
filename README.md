@@ -1,5 +1,7 @@
 # Aurora DSQL inventory buckets
 
+**Read the accompanying article:** [Hot Rows, Random Selection and OCC: Aurora DSQL](https://medium.com/@anuranasinghe151/hot-rows-random-selection-and-occ-aurora-dsql-f75600cfd7a5)
+
 By **Anuradha Ranasinghe**.
 
 A small JavaScript CDK demo using API Gateway, Lambda and Aurora DSQL. It demonstrates distributing inventory updates across four rows and compares two ways to select and decrement a bucket.
