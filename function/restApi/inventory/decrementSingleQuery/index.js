@@ -5,7 +5,6 @@ const ERROR_MESSAGES = {
 };
 
 export async function handler(event) {
-
   const body = JSON.parse(event.body);
 
   const response = await decrementSingleQuery(body.product);

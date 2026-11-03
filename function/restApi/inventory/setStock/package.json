@@ -1,0 +1,10 @@
+{
+  "name": "set-stock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aws/aurora-dsql-node-postgres-connector": "0.1.9",
+    "pg": "8.23.0"
+  }
+}

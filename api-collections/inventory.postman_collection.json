@@ -2,7 +2,7 @@
   "info": {
     "name": "DSQL inventory buckets",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Run sequentially with at least two units available and no other callers. Checks both decrement endpoints and consumes two units total. Examples are illustrative. Use ApacheBench for concurrent requests."
+    "description": "Run with load tests stopped. Set stock checks independent bucket values, zero, omitted buckets, repeated assignments and invalid input, then prepares all four buckets at ten. Each decrement folder consumes one unit. Examples are illustrative."
   },
   "variable": [
     {
@@ -11,6 +11,1662 @@
     }
   ],
   "item": [
+    {
+      "name": "Set stock",
+      "item": [
+        {
+          "name": "Set all buckets to ten",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Requested bucket values applied\", () => {",
+                  "  pm.expect(body.outcome).to.eql(\"stock_set\");",
+                  "  pm.expect(body.buckets).to.deep.eql([{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"stock_set\",\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "404 Bucket not found (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Bucket not found\"\n}"
+            },
+            {
+              "name": "503 Service Unavailable (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"conflict\"\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            },
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": -1}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            },
+            {
+              "name": "400 Duplicate bucket IDs (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1}, {\"bucketId\": 0, \"remaining\": 2}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Duplicate bucket IDs\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Set different values including zero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Requested bucket values applied\", () => {",
+                  "  pm.expect(body.outcome).to.eql(\"stock_set\");",
+                  "  pm.expect(body.buckets).to.deep.eql([{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"stock_set\",\n  \"buckets\": [\n    {\n      \"bucketId\": 1,\n      \"remaining\": 3\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 0\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 20\n    }\n  ]\n}"
+            },
+            {
+              "name": "404 Bucket not found (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Bucket not found\"\n}"
+            },
+            {
+              "name": "503 Service Unavailable (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"conflict\"\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            },
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": -1}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            },
+            {
+              "name": "400 Duplicate bucket IDs (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1}, {\"bucketId\": 0, \"remaining\": 2}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Duplicate bucket IDs\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Repeat the same bucket values",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Requested bucket values applied\", () => {",
+                  "  pm.expect(body.outcome).to.eql(\"stock_set\");",
+                  "  pm.expect(body.buckets).to.deep.eql([{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"stock_set\",\n  \"buckets\": [\n    {\n      \"bucketId\": 1,\n      \"remaining\": 3\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 0\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 20\n    }\n  ]\n}"
+            },
+            {
+              "name": "404 Bucket not found (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Bucket not found\"\n}"
+            },
+            {
+              "name": "503 Service Unavailable (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"conflict\"\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            },
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": -1}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            },
+            {
+              "name": "400 Duplicate bucket IDs (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1}, {\"bucketId\": 0, \"remaining\": 2}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Duplicate bucket IDs\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject negative stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": -1}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": -1}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject fractional stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1.5}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1.5}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject invalid bucket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 4, \"remaining\": 10}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 4, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject empty array",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": []}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": []}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject missing buckets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject extra field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}], \"extra\": true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}], \"extra\": true}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject extra bucket field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10, \"extra\": true}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10, \"extra\": true}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject integer overflow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 2147483648}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 2147483648}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject duplicate bucket IDs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1}, {\"bucketId\": 0, \"remaining\": 2}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Duplicate bucket IDs (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1}, {\"bucketId\": 0, \"remaining\": 2}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Duplicate bucket IDs\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify mixed values and omitted bucket unchanged",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/stock/bucketed"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Expected stock and no invalid-request changes\", () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.remaining).to.eql(33);",
+                  "  pm.expect(body.buckets).to.deep.eql([{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 3}, {\"bucketId\": 2, \"remaining\": 0}, {\"bucketId\": 3, \"remaining\": 20}]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prepare all buckets at ten",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected status\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Requested bucket values applied\", () => {",
+                  "  pm.expect(body.outcome).to.eql(\"stock_set\");",
+                  "  pm.expect(body.buckets).to.deep.eql([{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"stock_set\",\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "404 Bucket not found (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Bucket not found\"\n}"
+            },
+            {
+              "name": "503 Service Unavailable (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"conflict\"\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 10}, {\"bucketId\": 1, \"remaining\": 10}, {\"bucketId\": 2, \"remaining\": 10}, {\"bucketId\": 3, \"remaining\": 10}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            },
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": -1}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            },
+            {
+              "name": "400 Duplicate bucket IDs (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Set supplied bucket values exactly in one transaction. Accepts 1\u20134 distinct IDs (0\u20133), with integer remaining >= 0 up to 2147483647. Omitted buckets stay unchanged. Duplicate IDs return 400. No auth; stop load tests before changing stock.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"buckets\": [{\"bucketId\": 0, \"remaining\": 1}, {\"bucketId\": 0, \"remaining\": 2}]}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Duplicate bucket IDs\"\n}"
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "Two queries",
       "item": [

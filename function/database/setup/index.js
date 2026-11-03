@@ -1,8 +1,6 @@
 import { pool } from './dbClient.js';
 
-export async function handler(event = {}) {
-  if (event.action === 'reset') return reset();
-
+export async function handler() {
   await query('CREATE SCHEMA IF NOT EXISTS inventory');
 
   await query(`CREATE TABLE IF NOT EXISTS inventory.buckets (
@@ -62,16 +60,4 @@ export async function handler(event = {}) {
 
 function query(sql, values) {
   return pool.transaction((client) => client.query(sql, values));
-}
-
-async function reset() {
-  await pool.transaction(async (client) => {
-    await client.query(
-      "UPDATE inventory.buckets SET remaining = 10 WHERE product_id = 'bucketed'"
-    );
-  });
-
-  return {
-    message: 'Inventory reset to 40 units across four buckets; do not reset during a run'
-  };
 }

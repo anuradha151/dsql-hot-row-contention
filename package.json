@@ -18,5 +18,15 @@
   "devDependencies": {
     "aws-cdk": "2.1143.0"
   },
-  "author": "Anuradha Ranasinghe"
+  "author": "Anuradha Ranasinghe",
+  "description": "A small AWS CDK demo comparing two approaches to decrementing bucketed inventory with Aurora DSQL.",
+  "license": "MIT",
+  "keywords": [
+    "aws",
+    "cdk",
+    "aurora-dsql",
+    "serverless",
+    "inventory",
+    "optimistic-concurrency"
+  ]
 }

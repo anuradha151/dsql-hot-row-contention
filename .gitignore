@@ -4,3 +4,8 @@ cdk.out/
 .DS_Store
 .env
 *.log
+
+.env.*
+!.env.example
+cdk.context.json
+*.zip

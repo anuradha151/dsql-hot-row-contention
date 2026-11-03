@@ -6,7 +6,6 @@ const ERROR_MESSAGES = {
 };
 
 export async function handler(event) {
-
   const body = JSON.parse(event.body);
 
   const response = await decrement(body.product);
@@ -59,10 +58,11 @@ async function decrement(product) {
         [product, bucketId],
       );
 
-      if (updated.rowCount !== 1) throw Object.assign(
-        new Error('Candidate changed'),
-        { code: '40001' }
-      );
+      if (updated.rowCount !== 1)
+        throw Object.assign(
+          new Error('Candidate changed'),
+          { code: '40001' }
+        );
 
       return {
         outcome: 'decremented',
