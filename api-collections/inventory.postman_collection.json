@@ -1,0 +1,1187 @@
+{
+  "info": {
+    "name": "DSQL inventory buckets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run sequentially with at least two units available and no other callers. Checks both decrement endpoints and consumes two units total. Examples are illustrative. Use ApacheBench for concurrent requests."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://YOUR_API.execute-api.YOUR_REGION.amazonaws.com/demo"
+    }
+  ],
+  "item": [
+    {
+      "name": "Two queries",
+      "item": [
+        {
+          "name": "Read bucketed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Read stock and validate bucket totals. Run the full collection in order."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Stock contract and bucket totals\", () => {",
+                  "  pm.expect(body.product).to.eql(\"bucketed\");",
+                  "  pm.expect(body.buckets).to.have.lengthOf(4);",
+                  "  const ids = body.buckets.map(b => b.bucketId);",
+                  "  pm.expect(new Set(ids).size).to.eql(ids.length);",
+                  "  body.buckets.forEach(b => {",
+                  "    pm.expect(Number.isInteger(b.bucketId) && b.bucketId >= 0).to.eql(true);",
+                  "    pm.expect(Number.isInteger(b.remaining) && b.remaining >= 0).to.eql(true);",
+                  "  });",
+                  "  pm.expect(body.remaining).to.eql(body.buckets.reduce((sum, b) => sum + b.remaining, 0));",
+                  "});",
+                  "pm.variables.set(\"bucketedBefore\", body.remaining);",
+                  "pm.test(\"Stock is available for this test\", () => pm.expect(body.remaining).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 Stock (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"product\": \"bucketed\",\n  \"remaining\": 40,\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Decrement bucketed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement",
+            "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product\": \"bucketed\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Successful decrement contract\", () => {",
+                  "  pm.expect(body.outcome).to.eql(\"decremented\");",
+                  "  pm.expect(Number.isInteger(body.bucketId) && body.bucketId >= 0 && body.bucketId < 4).to.eql(true);",
+                  "  pm.expect(Number.isInteger(body.bucketRemaining) && body.bucketRemaining >= 0).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 decremented (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"decremented\",\n  \"bucketId\": 0,\n  \"bucketRemaining\": 9\n}"
+            },
+            {
+              "name": "409 out_of_stock (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"out_of_stock\"\n}"
+            },
+            {
+              "name": "503 conflict (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"conflict\"\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            },
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"invalid\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify bucketed decreased by one",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Read stock and validate bucket totals. Run the full collection in order."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Stock contract and bucket totals\", () => {",
+                  "  pm.expect(body.product).to.eql(\"bucketed\");",
+                  "  pm.expect(body.buckets).to.have.lengthOf(4);",
+                  "  const ids = body.buckets.map(b => b.bucketId);",
+                  "  pm.expect(new Set(ids).size).to.eql(ids.length);",
+                  "  body.buckets.forEach(b => {",
+                  "    pm.expect(Number.isInteger(b.bucketId) && b.bucketId >= 0).to.eql(true);",
+                  "    pm.expect(Number.isInteger(b.remaining) && b.remaining >= 0).to.eql(true);",
+                  "  });",
+                  "  pm.expect(body.remaining).to.eql(body.buckets.reduce((sum, b) => sum + b.remaining, 0));",
+                  "});",
+                  "pm.test(\"Exactly one unit consumed\", () => pm.expect(body.remaining).to.eql(Number(pm.variables.get(\"bucketedBefore\")) - 1));",
+                  "pm.variables.set(\"bucketedAfter\", body.remaining);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 Stock (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"product\": \"bucketed\",\n  \"remaining\": 39,\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 9\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject invalid product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement",
+            "description": "API Gateway must reject this body before invoking the Lambda.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product\": \"invalid\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"API Gateway rejects invalid body\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement",
+                "description": "API Gateway must reject this body before invoking the Lambda.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"invalid\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject missing product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement",
+            "description": "API Gateway must reject this body before invoking the Lambda.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"API Gateway rejects invalid body\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject extra field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement",
+            "description": "API Gateway must reject this body before invoking the Lambda.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product\": \"bucketed\", \"extra\": true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"API Gateway rejects invalid body\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify bucketed unchanged after invalid requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Read stock and validate bucket totals. Run the full collection in order."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Invalid requests consumed no stock\", () => pm.expect(pm.response.json().remaining).to.eql(Number(pm.variables.get(\"bucketedAfter\"))));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 Stock (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"product\": \"bucketed\",\n  \"remaining\": 39,\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 9\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Single query",
+      "item": [
+        {
+          "name": "Read bucketed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Read stock and validate bucket totals. Run the full collection in order."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Stock contract and bucket totals\", () => {",
+                  "  pm.expect(body.product).to.eql(\"bucketed\");",
+                  "  pm.expect(body.buckets).to.have.lengthOf(4);",
+                  "  const ids = body.buckets.map(b => b.bucketId);",
+                  "  pm.expect(new Set(ids).size).to.eql(ids.length);",
+                  "  body.buckets.forEach(b => {",
+                  "    pm.expect(Number.isInteger(b.bucketId) && b.bucketId >= 0).to.eql(true);",
+                  "    pm.expect(Number.isInteger(b.remaining) && b.remaining >= 0).to.eql(true);",
+                  "  });",
+                  "  pm.expect(body.remaining).to.eql(body.buckets.reduce((sum, b) => sum + b.remaining, 0));",
+                  "});",
+                  "pm.variables.set(\"bucketedBefore\", body.remaining);",
+                  "pm.test(\"Stock is available for this test\", () => pm.expect(body.remaining).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 Stock (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"product\": \"bucketed\",\n  \"remaining\": 40,\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Decrement bucketed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement-single-query",
+            "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product\": \"bucketed\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Successful decrement contract\", () => {",
+                  "  pm.expect(body.outcome).to.eql(\"decremented\");",
+                  "  pm.expect(Number.isInteger(body.bucketId) && body.bucketId >= 0 && body.bucketId < 4).to.eql(true);",
+                  "  pm.expect(Number.isInteger(body.bucketRemaining) && body.bucketRemaining >= 0).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 decremented (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement-single-query",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"decremented\",\n  \"bucketId\": 0,\n  \"bucketRemaining\": 9\n}"
+            },
+            {
+              "name": "409 out_of_stock (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement-single-query",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"out_of_stock\"\n}"
+            },
+            {
+              "name": "503 conflict (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement-single-query",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Service Unavailable",
+              "code": 503,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"outcome\": \"conflict\"\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement-single-query",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"bucketed\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            },
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement-single-query",
+                "description": "Consume one unit. HTTP writes are never automatically retried by this collection.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"invalid\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify bucketed decreased by one",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Read stock and validate bucket totals. Run the full collection in order."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Stock contract and bucket totals\", () => {",
+                  "  pm.expect(body.product).to.eql(\"bucketed\");",
+                  "  pm.expect(body.buckets).to.have.lengthOf(4);",
+                  "  const ids = body.buckets.map(b => b.bucketId);",
+                  "  pm.expect(new Set(ids).size).to.eql(ids.length);",
+                  "  body.buckets.forEach(b => {",
+                  "    pm.expect(Number.isInteger(b.bucketId) && b.bucketId >= 0).to.eql(true);",
+                  "    pm.expect(Number.isInteger(b.remaining) && b.remaining >= 0).to.eql(true);",
+                  "  });",
+                  "  pm.expect(body.remaining).to.eql(body.buckets.reduce((sum, b) => sum + b.remaining, 0));",
+                  "});",
+                  "pm.test(\"Exactly one unit consumed\", () => pm.expect(body.remaining).to.eql(Number(pm.variables.get(\"bucketedBefore\")) - 1));",
+                  "pm.variables.set(\"bucketedAfter\", body.remaining);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 Stock (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"product\": \"bucketed\",\n  \"remaining\": 39,\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 9\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject invalid product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement-single-query",
+            "description": "API Gateway must reject this body before invoking the Lambda.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product\": \"invalid\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"API Gateway rejects invalid body\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "400 Invalid request body (illustrative)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/decrement-single-query",
+                "description": "API Gateway must reject this body before invoking the Lambda.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"product\": \"invalid\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Invalid request body\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject missing product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement-single-query",
+            "description": "API Gateway must reject this body before invoking the Lambda.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"API Gateway rejects invalid body\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject extra field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/decrement-single-query",
+            "description": "API Gateway must reject this body before invoking the Lambda.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product\": \"bucketed\", \"extra\": true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"API Gateway rejects invalid body\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify bucketed unchanged after invalid requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/stock/bucketed",
+            "description": "Read stock and validate bucket totals. Run the full collection in order."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Invalid requests consumed no stock\", () => pm.expect(pm.response.json().remaining).to.eql(Number(pm.variables.get(\"bucketedAfter\"))));"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 Stock (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"product\": \"bucketed\",\n  \"remaining\": 39,\n  \"buckets\": [\n    {\n      \"bucketId\": 0,\n      \"remaining\": 9\n    },\n    {\n      \"bucketId\": 1,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 2,\n      \"remaining\": 10\n    },\n    {\n      \"bucketId\": 3,\n      \"remaining\": 10\n    }\n  ]\n}"
+            },
+            {
+              "name": "500 Internal error (illustrative)",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/stock/bucketed",
+                "description": "Read stock and validate bucket totals. Run the full collection in order."
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                }
+              ],
+              "body": "{\n  \"message\": \"Internal error\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

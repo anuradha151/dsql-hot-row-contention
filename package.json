@@ -1,0 +1,22 @@
+{
+  "name": "aurora-dsql-inventory-buckets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install-functions.mjs",
+    "api-test": "newman run api-collections/inventory.postman_collection.json -e api-collections/inventory.postman_environment.json --bail --timeout-request 35000",
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.271.0",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.1143.0"
+  },
+  "author": "Anuradha Ranasinghe"
+}
